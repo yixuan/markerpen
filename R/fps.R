@@ -42,8 +42,15 @@ fps_prox_gr = function(S, d, gr, mu, lambda, gamma = 1.0, maxit = 10, alpha = 0.
     if(d != 1)
         stop("d must be 1")
     p = nrow(S)
-    e = RSpectra::eigs_sym(S, d)
-    x = z1 = z2 = tcrossprod(e$vectors)
+
+    Ssub = S[gr, gr]
+    e = RSpectra::eigs_sym(Ssub, d)
+    x = matrix(0, p, p)
+    x[gr, gr] = tcrossprod(e$vectors)
+    z1 = z2 = x
+
+    # e = RSpectra::eigs_sym(S, d)
+    # x = z1 = z2 = tcrossprod(e$vectors)
 
     # Time for Fantope projection
     time_f = c()
