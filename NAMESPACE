@@ -3,6 +3,6 @@ importFrom(RSpectra, eigs_sym)
 import(ggplot2)
 
 export(view_matrix, view_evec)
-export(prox_fantope, proj_fantope, fps_prox_gr)
+export(prox_fantope, proj_fantope, fps_prox_gr, pca_pen)
 
 useDynLib(markerpen, .registration = TRUE)
