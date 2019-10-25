@@ -1,5 +1,5 @@
-#ifndef MARKER_PKG_H
-#define MARKER_PKG_H
+#ifndef MARKERPEN_PKG_H
+#define MARKERPEN_PKG_H
 
 #include <RcppEigen.h>
 
@@ -13,4 +13,4 @@ typedef Eigen::SparseMatrix<double> SpMat;
 typedef Eigen::Map<SpMat> MapSpMat;
 typedef Eigen::Map<const SpMat> MapConstSpMat;
 
-#endif  // MARKER_PKG_H
+#endif  // MARKERPEN_PKG_H

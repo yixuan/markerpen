@@ -1,5 +1,5 @@
-#ifndef MARKER_PROX_FANTOPE_H
-#define MARKER_PROX_FANTOPE_H
+#ifndef MARKERPEN_PROX_FANTOPE_H
+#define MARKERPEN_PROX_FANTOPE_H
 
 #include "common.h"
 #include "quadprog.h"
@@ -178,4 +178,4 @@ Rcpp::NumericMatrix prox_fantope(MapMat v, double alpha, MapMat S, int d, int in
 } */
 
 
-#endif  // MARKER_PROX_FANTOPE_H
+#endif  // MARKERPEN_PROX_FANTOPE_H

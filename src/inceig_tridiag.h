@@ -1,5 +1,5 @@
-#ifndef MARKER_INCEIG_TRIDIAG_H
-#define MARKER_INCEIG_TRIDIAG_H
+#ifndef MARKERPEN_INCEIG_TRIDIAG_H
+#define MARKERPEN_INCEIG_TRIDIAG_H
 
 #include "common.h"
 #include "tridiag.h"
@@ -200,4 +200,4 @@ public:
 };
 
 
-#endif // MARKER_INCEIG_TRIDIAG_H
+#endif // MARKERPEN_INCEIG_TRIDIAG_H

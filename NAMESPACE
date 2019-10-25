@@ -5,4 +5,4 @@ import(ggplot2)
 export(view_matrix, view_evec)
 export(prox_fantope, proj_fantope, fps_prox_gr)
 
-useDynLib(marker, .registration = TRUE)
+useDynLib(markerpen, .registration = TRUE)

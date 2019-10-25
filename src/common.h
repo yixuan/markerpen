@@ -1,5 +1,5 @@
-#ifndef MARKER_COMMON_H
-#define MARKER_COMMON_H
+#ifndef MARKERPEN_COMMON_H
+#define MARKERPEN_COMMON_H
 
 #include <RcppEigen.h>
 
@@ -21,4 +21,4 @@ typedef Eigen::Map<SpMat> MapSpMat;
 typedef Eigen::Map<const SpMat> MapConstSpMat;
 
 
-#endif  // MARKER_COMMON_H
+#endif  // MARKERPEN_COMMON_H

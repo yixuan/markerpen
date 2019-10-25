@@ -1,5 +1,5 @@
-#ifndef MARKER_TRIDIAG_H
-#define MARKER_TRIDIAG_H
+#ifndef MARKERPEN_TRIDIAG_H
+#define MARKERPEN_TRIDIAG_H
 
 #include <Rcpp.h>
 
@@ -88,4 +88,4 @@ inline int tridiag_shift_solve(
 }
 
 
-#endif // MARKER_TRIDIAG_H
+#endif // MARKERPEN_TRIDIAG_H
