@@ -96,10 +96,15 @@ fps_prox_gr = function(S, d, gr, mu, lambda, gamma = 1.0, maxit = 10, alpha = 0.
 proj_pos_simplex = function(x, a)
 {
     n = length(x)
-    constr = rbind(rep(1, n), diag(n))
-    rhs = c(a, rep(0, n))
-    sol = quadprog::solve.QP(Dmat = diag(n), dvec = x, Amat = t(constr), bvec = rhs, meq = 1)
-    sol$solution
+    u = sort(x, decreasing = TRUE)
+    cumu = cumsum(u)
+    for(j in n:1)
+    {
+        if(u[j] + (a - cumu[j]) / j > 0)
+            break
+    }
+    lambda = (a - cumu[j]) / j
+    pmax(x + lambda, 0)
 }
 
 proj_constr = function(x, gr, gr_weight)
@@ -158,7 +163,7 @@ pca_pen_prox = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, alpha = 0.01
     list(proj = x, z1 = z1, z2 = z2, time_f = time_f, time_p = time_p, time_t = time_f + time_p, error = err)
 }
 
-pca_pen = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, rho = 1, Pi = NULL)
+pca_pen = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, rho = 1, dyn_rho = TRUE, Pi = NULL)
 {
     p = nrow(S)
 
@@ -176,18 +181,27 @@ pca_pen = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, rho = 1, Pi = NUL
     for(i in 1:maxit)
     {
         t1 = Sys.time()
-        x = proj_fantope(y - u + (S - lambda) / rho, 1)
+        # x = proj_fantope(y - u + (S - lambda) / rho, 1)
+        x = prox_fantope(S - lambda, y - u, alpha = 1 / rho, d = 1, inc = 30)
         t2 = Sys.time()
 
         newy = proj_constr(x + u, gr, gr_weight)
         t3 = Sys.time()
 
         resid1 = norm(x - newy, type = "F")
-        resid2 = norm(newy - y, type = "F")
+        resid2 = rho * norm(newy - y, type = "F")
+
+        cat(sprintf("iter = %d, resid1 = %f, resid2 = %f, rho = %f\n", i, resid1, resid2, rho))
 
         y = newy
         u = u + x - y
-        cat(sprintf("iter = %d, resid1 = %f, resid2 = %f\n", i, resid1, resid2))
+        if(isTRUE(dyn_rho))
+        {
+            if(resid1 > 10 * resid2)
+                rho = rho * 2
+            if(resid2 > 10 * resid1)
+                rho = rho / 2
+        }
 
         time_f = c(time_f, t2 - t1)
         time_p = c(time_p, t3 - t2)
