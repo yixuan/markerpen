@@ -92,21 +92,6 @@ fps_prox_gr = function(S, d, gr, mu, lambda, gamma = 1.0, maxit = 10, alpha = 0.
 
 
 
-# Project x = (x1, ..., xn) to {x: sum(x) = a, x >= 0}
-proj_pos_simplex = function(x, a)
-{
-    n = length(x)
-    u = sort(x, decreasing = TRUE)
-    cumu = cumsum(u)
-    for(j in n:1)
-    {
-        if(u[j] + (a - cumu[j]) / j > 0)
-            break
-    }
-    lambda = (a - cumu[j]) / j
-    pmax(x + lambda, 0)
-}
-
 proj_constr = function(x, gr, gr_weight)
 {
     diagx = diag(x)
