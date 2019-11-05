@@ -1,8 +1,14 @@
 importFrom(Rcpp, evalCpp)
 importFrom(RSpectra, eigs_sym)
+importFrom(quadprog, solve.QP)
+importFrom(rosqp, solve_osqp, osqpSettings)
+importFrom(NMF, fcnnls)
+importFrom(Matrix, Diagonal, bdiag, colSums)
+importFrom(R6, R6Class)
 import(ggplot2)
 
 export(view_matrix, view_evec)
 export(prox_fantope, proj_fantope, fps_prox_gr, pca_pen, pca_pen_prox)
+export(Deconv)
 
 useDynLib(markerpen, .registration = TRUE)
