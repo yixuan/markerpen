@@ -3,7 +3,7 @@ importFrom(RSpectra, eigs_sym)
 importFrom(quadprog, solve.QP)
 importFrom(rosqp, solve_osqp, osqpSettings)
 importFrom(NMF, fcnnls)
-importFrom(Matrix, Diagonal, bdiag, colSums)
+importFrom(Matrix, Diagonal, bdiag, colSums, t, norm, crossprod)
 importFrom(R6, R6Class)
 import(ggplot2)
 

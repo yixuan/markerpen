@@ -245,15 +245,88 @@ deconv_fsg = function(X, W, F0, S0, G0, lambda, niter = 100, total_min = 0.95, t
 
 
 
+pgd_lg = function(X, W, F0, S0, G0, lambda, lr = 1e-3, niter = 100, eps = 1e-6)
+{
+    n = nrow(X)
+    p = ncol(X)
+    nc = length(S0)
+
+    Y = log(X + eps)
+    Fmat = F0
+    S = S0
+    G = G0
+
+    loss = c()
+
+    for(k in 1:niter)
+    {
+        GS = G %*% Diagonal(x = S)
+        R = Fmat %*% t(GS)
+        logR = log(R + eps)
+
+        obj1 = norm(Y - logR, type = "F")^2
+        obj2 = sum(W * G^2)
+        obj = obj1 + lambda * obj2
+        loss = c(loss, obj)
+        cat(sprintf("k = %d, obj1 = %f, obj2 = %f, obj = %f\n", k, obj1, obj2, obj))
+
+        # dR
+        dR = 2 * (logR - Y) / (R + eps)
+
+        # dF
+        dF = as.matrix(dR %*% GS)
+
+        # dS
+        A = matrix(0, n * p, nc)
+        for(i in 1:nc)
+        {
+            A[, i] = as.numeric(outer(Fmat[, i], G[, i]))
+        }
+        dS = as.numeric(crossprod(A, as.numeric(dR)))
+
+        # dG
+        dG = as.matrix(crossprod(dR, Fmat %*% Diagonal(x = S))) + 2 * lambda * G * W
+
+        # Gradient descent
+        cat(sprintf("===> ||dF|| = %f, ||dS|| = %f, ||dG|| = %f\n\n",
+                    norm(dF, type = "F"),
+                    sqrt(sum(dS^2)),
+                    norm(dG, type = "F")))
+        Fmat = Fmat - lr * dF
+        S = S - lr * dS
+        G = G - lr * dG
+
+        # Projection
+        for(i in 1:n)
+        {
+            Fmat[i, ] = proj_pos_simplex(Fmat[i, ], 1)
+        }
+        S = pmax(S, 0)
+        for(i in 1:nc)
+        {
+            G[, i] = proj_pos_simplex(G[, i], 1)
+        }
+    }
+
+    list(loss = loss, F = Fmat, S = S, G = G)
+}
+
+
+
 Deconv = R6Class("Deconv",
     public = list(
-        initialize = function(dat_unnorm, markers)
+        initialize = function(dat_unnorm, markers, normalize = TRUE)
         {
             mat_unnorm = t(as.matrix(dat_unnorm %>% select(-gene_name)))
-            count_subj = rowSums(mat_unnorm)
+            if(normalize)
+            {
+                # Normalize each observation
+                count_subj = rowSums(mat_unnorm)
+                private$dat = mat_unnorm / count_subj
+            } else {
+                private$dat = mat_unnorm
+            }
 
-            # Normalize each observation
-            private$dat = mat_unnorm / count_subj
             private$gene_name = dat_unnorm$gene_name
 
             # In case `markers` contains genes not in the data
