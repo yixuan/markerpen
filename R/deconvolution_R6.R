@@ -1,17 +1,24 @@
+# Make row sum to 1
+scale_row = function(x)
+{
+    rsum = rowSums(x)
+    x / rsum
+}
+
+# Make column sum to 1
+scale_col = function(x)
+{
+    csum = colSums(x)
+    sweep(x, 2, csum, "/")
+}
+
 Deconv = R6Class("Deconv",
     public = list(
         initialize = function(dat_unnorm, markers, normalize = TRUE)
         {
             mat_unnorm = t(as.matrix(dat_unnorm %>% select(-gene_name)))
-            if(normalize)
-            {
-                # Normalize each observation
-                count_subj = rowSums(mat_unnorm)
-                private$dat = mat_unnorm / count_subj
-            } else {
-                private$dat = mat_unnorm
-            }
-
+            # Normalize each observation if needed
+            private$dat = if(normalize) scale_row(mat_unnorm) else mat_unnorm
             private$gene_name = dat_unnorm$gene_name
 
             # In case `markers` contains genes not in the data
