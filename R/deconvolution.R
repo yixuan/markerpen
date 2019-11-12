@@ -281,10 +281,10 @@ Deconv = R6Class("Deconv",
             view_matrix(private$mat_exp)
         },
 
-        view_F = function(n = 20, ...)
+        view_F = function(from = 1, to = 20, ...)
         {
             nc = length(private$markers)
-            view_matrix(t(private$mat_F[1:n, ]), legend_title = "Fraction", ...) +
+            view_matrix(t(private$mat_F[from:to, ]), legend_title = "Fraction", ...) +
                 scale_y_continuous("", breaks = 1:nc,
                                    labels = substr(names(private$markers), 1, 3))
         },
