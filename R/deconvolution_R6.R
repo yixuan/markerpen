@@ -1,14 +1,16 @@
 # Make row sum to 1
-scale_row = function(x)
+scale_row = function(x, rsum = NULL)
 {
-    rsum = rowSums(x)
+    if(is.null(rsum))
+        rsum = rowSums(x)
     x / rsum
 }
 
 # Make column sum to 1
-scale_col = function(x)
+scale_col = function(x, csum = NULL)
 {
-    csum = colSums(x)
+    if(is.null(csum))
+        csum = colSums(x)
     sweep(x, 2, csum, "/")
 }
 
@@ -58,12 +60,30 @@ Deconv = R6Class("Deconv",
                                 labels = substr(names(private$markers), 1, 3))
         },
 
-        view_SG = function(...)
+        view_SG = function(log = FALSE, ...)
         {
+            sg = private$mat_G %*% Diagonal(x = private$mat_S)
+            if(log)
+                sg = log(1e6 * sg + 1)
             nc = length(private$markers)
-            view_evec(private$mat_G %*% Diagonal(x = private$mat_S), ...) +
+            view_evec(sg, ...) +
                 scale_y_reverse("", breaks = 1:nc,
                                 labels = substr(names(private$markers), 1, 3))
+        },
+
+        get_F = function()
+        {
+            private$mat_F
+        },
+
+        get_S = function()
+        {
+            private$mat_S
+        },
+
+        get_G = function()
+        {
+            private$mat_G
         }
     ),
 
@@ -96,33 +116,41 @@ Deconv$set("public", "remove_extreme_genes", function(l = 0.1, u = 0.9) {
 
 # Construct the (initial) signature matrix G
 # Optionally select a subset of genes from each cell type
-Deconv$set("public", "init_params", function(select = NULL) {
-    coefs = lapply(private$markers, function(marker) {
-        ind = match(marker, private$gene_name)
-        dat_marker = private$dat[, ind]
-        coef = eigs_sym(cov(dat_marker), 1)$vectors
-        rownames(coef) = marker
-        abs(coef)
-    })
-    mat = bdiag(coefs)
-    colnames(mat) = names(private$markers)
-    rownames(mat) = unlist(lapply(coefs, rownames), use.names = FALSE)
-
-    # Normalize G to make each column sum to 1
-    G0 = sweep(as.matrix(mat), 2, colSums(mat), "/")
-
-    # X ~= F * S * G
+Deconv$set("public", "init_params", function(F0 = NULL, G0 = NULL, select = NULL) {
     X = private$mat_exp
     scl = sqrt(colSums(X^2))
-    F0 = t(fcnnls(G0 / scl, t(X) / scl, pseudo = FALSE)$x)
-    F0 = F0 / rowSums(F0)
-    # Xt = t(X)
-    # rownames(Xt) = unlist(private$markers)
-    # F0 = t(EstimateWeight(Xt, private$markers, method = "LM")$weight)
-    # F0 = F0 / rowSums(F0)
+
+    if(is.null(G0))
+    {
+        coefs = lapply(private$markers, function(marker) {
+            ind = match(marker, private$gene_name)
+            dat_marker = private$dat[, ind]
+            coef = eigs_sym(cov(dat_marker), 1)$vectors
+            rownames(coef) = marker
+            abs(coef)
+        })
+        mat = bdiag(coefs)
+        G0 = scale_col(as.matrix(mat))
+    } else {
+        G0 = scale_col(pmax(G0, 0))
+    }
+
+    if(is.null(F0))
+    {
+        # Xt = t(X)
+        # rownames(Xt) = unlist(private$markers)
+        # F0 = t(EstimateWeight(Xt, private$markers, method = "LM")$weight)
+        # F0 = F0 / rowSums(F0)
+
+        F0 = t(fcnnls(G0 / scl, t(X) / scl, pseudo = FALSE)$x)
+        F0 = scale_row(pmax(F0, 0))
+    } else {
+        F0 = scale_row(pmax(F0, 0))
+    }
+
     S0 = s_update(X, F0, G0)
 
-    private$mat_W = as.matrix(mat == 0)
+    private$mat_W = as.matrix(1 - bdiag(lapply(private$markers, function(x) rep(1, length(x)))))
     private$mat_F = F0
     private$mat_S = S0
     private$mat_G = G0
@@ -153,7 +181,7 @@ Deconv$set("public", "init_params", function(select = NULL) {
         private$mat_exp = private$dat[, ind]
 
         # Recursively call this function to re-initialize (F, S, G)
-        self$init_params(select = NULL)
+        self$init_params(F0 = NULL, G0 = NULL, select = NULL)
     }
 })
 
