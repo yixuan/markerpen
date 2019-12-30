@@ -99,7 +99,7 @@ s_update = function(X, Fmat, G)
         A[, i] = as.numeric(outer(Fmat[, i], G[, i]))
     }
 
-    as.numeric(fcnnls(A, as.numeric(X), pseudo = FALSE)$x)
+    as.numeric(fcnnls(A, as.numeric(X), pseudo = FALSE)$x) + 1e-5
 }
 
 # Test
