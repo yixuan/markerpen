@@ -30,7 +30,8 @@
 ##' view_evec(v)
 
 # Visualization of a matrix by coloring its coefficients
-view_matrix = function(mat, legend_title = "Coefficient", bar_height = 10, font_size = 20)
+view_matrix = function(mat, legend_title = "Coefficient", bar_height = 10, font_size = 20,
+                       xlab = "", ylab = "")
 {
     mat = as.matrix(mat)
     lo = min(mat)
@@ -68,13 +69,13 @@ view_matrix = function(mat, legend_title = "Coefficient", bar_height = 10, font_
 
     ggplot(gdat, aes(x = x, y = y, fill = z)) +
         geom_tile() +
-        scale_x_continuous("", breaks = breaks_x, expand = c(0, 0)) +
-        scale_y_reverse("", breaks = breaks_y, expand = c(0, 0)) +
+        scale_x_continuous(xlab, breaks = breaks_x, expand = c(0, 0)) +
+        scale_y_reverse(ylab, breaks = breaks_y, expand = c(0, 0)) +
         scale_fill_gradientn(legend_title, colors = colors) +
         guides(fill = guide_colorbar(barheight = bar_height)) +
         coord_fixed() +
         theme_bw(base_size = font_size) +
-        theme(axis.title = element_blank())
+        theme(axis.title = if(xlab == "" && ylab == "") element_blank() else element_text())
 }
 
 # Visualization of eigenvectors
