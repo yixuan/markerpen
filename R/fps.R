@@ -92,11 +92,22 @@ fps_prox_gr = function(S, d, gr, mu, lambda, gamma = 1.0, maxit = 10, alpha = 0.
 
 
 
+# Project x = (x1, ..., xn) to {x: a <= sum(x) <= b, x >= 0}
+proj_pos_simplex_ineq = function(x, a, b)
+{
+    n = length(x)
+    constr = rbind(rep(1, n), rep(-1, n), diag(n))
+    rhs = c(a, -b, rep(0, n))
+    sol = quadprog::solve.QP(Dmat = diag(n), dvec = x, Amat = t(constr), bvec = rhs)
+    sol$solution
+}
+
 proj_constr = function(x, gr, gr_weight)
 {
     diagx = diag(x)
-    diagx[gr] = proj_pos_simplex(diagx[gr], gr_weight)
-    diagx[-gr] = proj_pos_simplex(diagx[-gr], 1 - gr_weight)
+    diagx[gr] = proj_pos_simplex_ineq(diagx[gr], gr_weight, 1)
+    w = sum(diagx[gr])
+    diagx[-gr] = proj_pos_simplex(diagx[-gr], 1 - w)
     x = pmax(x, 0)
     diag(x) = diagx
     x
