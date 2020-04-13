@@ -2,11 +2,7 @@ importFrom(Rcpp, evalCpp)
 importFrom(RSpectra, eigs_sym)
 importFrom(quadprog, solve.QP)
 importFrom(rosqp, solve_osqp, osqpSettings)
-importFrom(NMF, fcnnls)
-importFrom(Matrix, Diagonal, bdiag, colSums, t, norm, crossprod)
-importFrom(R6, R6Class)
 
 export(prox_fantope, proj_fantope, fps_prox_gr, pca_pen, pca_pen_prox)
-export(Deconv)
 
 useDynLib(markerpen, .registration = TRUE)

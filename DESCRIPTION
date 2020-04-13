@@ -9,5 +9,5 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-Imports: Rcpp (>= 1.0.1), Matrix, RSpectra, rosqp, quadprog, NMF, R6
+Imports: Rcpp (>= 1.0.1), RSpectra, rosqp, quadprog
 LinkingTo: Rcpp, RcppEigen, RSpectra
