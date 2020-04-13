@@ -5,9 +5,7 @@ importFrom(rosqp, solve_osqp, osqpSettings)
 importFrom(NMF, fcnnls)
 importFrom(Matrix, Diagonal, bdiag, colSums, t, norm, crossprod)
 importFrom(R6, R6Class)
-import(ggplot2)
 
-export(view_matrix, view_evec)
 export(prox_fantope, proj_fantope, fps_prox_gr, pca_pen, pca_pen_prox)
 export(Deconv)
 
