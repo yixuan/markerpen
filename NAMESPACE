@@ -1,8 +1,7 @@
 importFrom(Rcpp, evalCpp)
 importFrom(RSpectra, eigs_sym)
 importFrom(quadprog, solve.QP)
-importFrom(rosqp, solve_osqp, osqpSettings)
 
-export(prox_fantope, proj_fantope, fps_prox_gr, pca_pen, pca_pen_prox)
+export(pca_pen_prox)
 
 useDynLib(markerpen, .registration = TRUE)
