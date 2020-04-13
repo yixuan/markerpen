@@ -35,7 +35,7 @@ Rcpp::NumericMatrix prox_fantope(MapMat A, MapMat B, double alpha, int d,
     MapMat resm(res.begin(), n, n);
     double dsum;
 
-    prox_fantope_impl(matm, d, inc, maxiter, resm, dsum, eps, verbose);
+    prox_fantope_hard_impl(matm, d, inc, maxiter, resm, dsum, eps, verbose);
 
     return res;
 }

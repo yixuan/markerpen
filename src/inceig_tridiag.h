@@ -38,28 +38,42 @@ private:
     typedef Eigen::Map<const MatrixXd> MapConstMat;
     typedef Eigen::Ref<const MatrixXd> RefConstMat;
 
-    int           m_n;
-    MatrixXd      m_Q;
-    VectorXd      m_tau;
-    VectorXd      m_diag;
-    VectorXd      m_subdiag;
+    int      m_n;               // Dimension of the matrix
+    MatrixXd m_Q;               // Tridiagonal decomposition, x = QTQ'
+    VectorXd m_tau;             // Scalar factor for Q
+    VectorXd m_diag;            // Diagonal elements of T
+    VectorXd m_subdiag;         // Sub-diagonal elements of T
 
-    VectorXd      m_dcache;
-    VectorXd      m_lcache;
-    VectorXd      m_ucache;
+    VectorXd m_dcache;          // Work space
+    VectorXd m_lcache;          // Work space
+    VectorXd m_ucache;          // Work space
 
-    VectorXd      m_evals;
-    MatrixXd      m_evecs;
+    VectorXd m_evals_lg;        // Largest eigenvalues
+    MatrixXd m_evecs_lg;        // Eigenvectors for largest eigenvalues
+    VectorXd m_evals_sm;        // Smallest eigenvalues
+    MatrixXd m_evecs_sm;        // Eigenvectors for Smallest eigenvalues
 
-    int           m_max_evals;
-    int           m_init_evals;
-    int           m_num_computed;
+    int      m_max_evals_lg;    // Maximum number of largest eigenvalues to be computed
+    int      m_max_evals_sm;    // Maximum number of smallest eigenvalues to be computed
+    int      m_num_computed_lg; // Number of largest eigenvalues computed
+    int      m_num_computed_sm; // Number of smallest eigenvalues computed
 
-    double        m_shift;
+    double   m_shift_lg;        // Current shift for the largest eigenvalues
+    double   m_shift_sm;        // Current shift for the smallest eigenvalues
 
+    bool     m_mode;            // To compute the largest eigenvalues (true) or the smallest (false)
+
+    // x <- Qx
+    //        [  d                  ]
+    //        [  e   d              ]
+    // Qmat = [  v1  e   d          ]
+    //        [  v1  v2  e   d      ]
+    //        [  v1  v2  v3  e   d  ]
+    // Q = H1 * H2 * ... * Hn-2
+    // Hi = I - tau * ui * ui'
+    // ui = (0, ..., 0, 1, vi)
     inline void apply_Qx(double* xptr) const
     {
-
         int vlen = 1;
         for(int i = m_n - 3; i >= 0; i--, vlen++)
         {
@@ -77,14 +91,17 @@ public:
 
     // 1. Set the size of the problem
     // 2. Compute initial `init_evals` eigenvalues
-    // 3. Cholesky factorization for the shift-and-invert mode
-    inline void init(const RefConstMat& mat, int max_evals, int init_evals)
+    // 3. Tridiagonal factorization for the shift-and-invert mode
+    inline void init(const RefConstMat& mat, int max_evals_lg, int init_evals_lg, int max_evals_sm, int init_evals_sm)
     {
         // 1. Set the size of the problem
-        m_max_evals = max_evals;
-        m_init_evals = init_evals;
-        m_num_computed = 0;
-        m_shift = 0.0;
+        m_max_evals_lg = max_evals_lg;
+        m_num_computed_lg = 0;
+        m_shift_lg = 0.0;
+
+        m_max_evals_sm = max_evals_sm;
+        m_num_computed_sm = 0;
+        m_shift_sm = 0.0;
 
         m_n = mat.rows();
         m_Q.resize(m_n, m_n);
@@ -96,8 +113,12 @@ public:
         m_lcache.resize(m_n - 1);
         m_ucache.resize(m_n - 1);
 
-        m_evals.resize(m_max_evals);
-        m_evecs.resize(m_n, m_max_evals);
+        m_evals_lg.resize(m_max_evals_lg);
+        m_evecs_lg.resize(m_n, m_max_evals_lg);
+        m_evals_sm.resize(m_max_evals_sm);
+        m_evecs_sm.resize(m_n, m_max_evals_sm);
+
+        m_mode = true;
 
         // 2. Tridiagonalization
         char uplo = 'L';
@@ -121,16 +142,33 @@ public:
 
         // 3. Compute initial `init_evals` eigenvalues
         SymTridiag op(m_n, m_diag.data(), m_subdiag.data());
-        Spectra::SymEigsSolver<double, Spectra::LARGEST_ALGE, SymTridiag>
-            eigs(&op, init_evals, std::min(m_n, std::max(20, init_evals * 2 + 1)));
-        eigs.init();
-        eigs.compute(1000, 1e-6);
+        if(init_evals_lg > 0)
+        {
+            Spectra::SymEigsSolver<double, Spectra::LARGEST_ALGE, SymTridiag>
+            eigs_lg(&op, init_evals_lg, std::min(m_n, std::max(20, init_evals_lg * 2 + 1)));
+            eigs_lg.init();
+            eigs_lg.compute(1000, 1e-6, Spectra::LARGEST_ALGE);
 
-        // Store computed eigenvalues and eigenvectors
-        m_evals.head(init_evals).noalias() = eigs.eigenvalues();
-        m_evecs.leftCols(init_evals).noalias() = eigs.eigenvectors();
-        m_num_computed += init_evals;
-        m_shift = m_evals[m_num_computed - 1] - 1e-6;
+            // Store computed eigenvalues and eigenvectors
+            m_evals_lg.head(init_evals_lg).noalias() = eigs_lg.eigenvalues();
+            m_evecs_lg.leftCols(init_evals_lg).noalias() = eigs_lg.eigenvectors();
+            m_num_computed_lg += init_evals_lg;
+            m_shift_lg = m_evals_lg[m_num_computed_lg - 1] - 1e-6;
+        }
+
+        if(init_evals_sm > 0)
+        {
+            Spectra::SymEigsSolver<double, Spectra::SMALLEST_ALGE, SymTridiag>
+            eigs_sm(&op, init_evals_sm, std::min(m_n, std::max(20, init_evals_sm * 2 + 1)));
+            eigs_sm.init();
+            eigs_sm.compute(1000, 1e-6, Spectra::SMALLEST_ALGE);
+
+            // Store computed eigenvalues and eigenvectors
+            m_evals_sm.head(init_evals_sm).noalias() = eigs_sm.eigenvalues();
+            m_evecs_sm.leftCols(init_evals_sm).noalias() = eigs_sm.eigenvectors();
+            m_num_computed_sm += init_evals_sm;
+            m_shift_sm = m_evals_sm[m_num_computed_sm - 1] + 1e-6;
+        }
     }
 
     inline int rows() const { return m_n; }
@@ -139,10 +177,11 @@ public:
     // y = solve(s * I - T, x)
     inline void perform_op(const double* x_in, double* y_out)
     {
+        const double shift = m_mode ? m_shift_lg : m_shift_sm;
         // First use the fast solver
         // If not stable (divided-by-zero), use the LAPACK function
         int info = tridiag_shift_solve(
-            m_n, m_diag.data(), m_subdiag.data(), x_in, m_shift, y_out,
+            m_n, m_diag.data(), m_subdiag.data(), x_in, shift, y_out,
             m_lcache.data(), m_dcache.data()
         );
         if(info == 0)
@@ -155,7 +194,7 @@ public:
         // Otherwise, use LAPACK
         std::copy(x_in, x_in + m_n, y_out);
 
-        m_dcache.array() = m_shift - m_diag.array();
+        m_dcache.array() = shift - m_diag.array();
         m_lcache.noalias() = -m_subdiag;
         m_ucache.noalias() = -m_subdiag;
 
@@ -166,37 +205,66 @@ public:
             throw std::runtime_error("failed to compute eigenvalues");
     }
 
-    inline int compute_next(int inc_evals)
+    inline int compute_next_largest(int inc_evals)
     {
-        if(m_num_computed + inc_evals > m_max_evals)
+        m_mode = true;
+        if(m_num_computed_lg + inc_evals > std::min(m_n, m_max_evals_lg))
             throw std::logic_error("maximum number of eigenvalues computed");
 
         Spectra::SymEigsSolver<double, Spectra::LARGEST_ALGE, IncrementalEig>
             eigs(this, inc_evals, std::min(m_n, std::max(20, inc_evals * 2 + 1)));
         eigs.init();
-        eigs.compute(1000, 1e-6);
+        eigs.compute(1000, 1e-6, Spectra::LARGEST_ALGE);
 
         // Store computed eigenvalues and eigenvectors
-        m_evals.segment(m_num_computed, inc_evals).array() = m_shift - 1.0 / eigs.eigenvalues().array();
-        m_evecs.block(0, m_num_computed, m_n, inc_evals).noalias() = eigs.eigenvectors();
-        m_num_computed += inc_evals;
-        m_shift = m_evals[m_num_computed - 1] - 1e-6;
+        m_evals_lg.segment(m_num_computed_lg, inc_evals).array() = m_shift_lg - 1.0 / eigs.eigenvalues().array();
+        m_evecs_lg.block(0, m_num_computed_lg, m_n, inc_evals).noalias() = eigs.eigenvectors();
+        m_num_computed_lg += inc_evals;
+        m_shift_lg = m_evals_lg[m_num_computed_lg - 1] - 1e-6;
 
         return eigs.num_operations();
     }
 
-    inline void compute_eigenvectors()
+    inline int compute_next_smallest(int inc_evals)
     {
-        #pragma omp parallel for shared(m_num_computed, m_evecs)
-        for(int i = 0; i < m_num_computed; i++)
+        m_mode = false;
+        if(m_num_computed_sm + inc_evals > std::min(m_n, m_max_evals_sm))
+            throw std::logic_error("maximum number of eigenvalues computed");
+
+        Spectra::SymEigsSolver<double, Spectra::SMALLEST_ALGE, IncrementalEig>
+            eigs(this, inc_evals, std::min(m_n, std::max(20, inc_evals * 2 + 1)));
+        eigs.init();
+        eigs.compute(1000, 1e-6, Spectra::SMALLEST_ALGE);
+
+        // Store computed eigenvalues and eigenvectors
+        m_evals_sm.segment(m_num_computed_sm, inc_evals).array() = m_shift_sm - 1.0 / eigs.eigenvalues().array();
+        m_evecs_sm.block(0, m_num_computed_sm, m_n, inc_evals).noalias() = eigs.eigenvectors();
+        m_num_computed_sm += inc_evals;
+        m_shift_sm = m_evals_sm[m_num_computed_sm - 1] + 1e-6;
+
+        return eigs.num_operations();
+    }
+
+    inline void compute_eigenvectors(int num_lg, int num_sm)
+    {
+        #pragma omp parallel for shared(m_evecs_lg)
+        for(int i = 0; i < num_lg; i++)
         {
-            apply_Qx(&m_evecs(0, i));
+            apply_Qx(&m_evecs_lg(0, i));
+        }
+        #pragma omp parallel for shared(m_evecs_sm)
+        for(int i = 0; i < num_sm; i++)
+        {
+            apply_Qx(&m_evecs_sm(0, i));
         }
     }
 
-    const int num_computed() const { return m_num_computed; }
-    const VectorXd& eigenvalues() const { return m_evals; }
-    const MatrixXd& eigenvectors() const { return m_evecs; }
+    const int num_computed_largest() const { return m_num_computed_lg; }
+    const int num_computed_smallest() const { return m_num_computed_sm; }
+    const VectorXd& largest_eigenvalues() const { return m_evals_lg; }
+    const VectorXd& smallest_eigenvalues() const { return m_evals_sm; }
+    const MatrixXd& largest_eigenvectors() const { return m_evecs_lg; }
+    const MatrixXd& smallest_eigenvectors() const { return m_evecs_sm; }
 };
 
 
