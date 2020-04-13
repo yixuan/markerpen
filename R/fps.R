@@ -113,7 +113,7 @@ proj_constr = function(x, gr, gr_weight)
     x
 }
 
-pca_pen_prox = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, alpha = 0.01, Pi = NULL)
+pca_pen_prox = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, alpha = 0.01, eps = 1e-4, Pi = NULL)
 {
     p = nrow(S)
 
@@ -155,6 +155,8 @@ pca_pen_prox = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, alpha = 0.01
         time_p = c(time_p, t3 - t2)
         if(!is.null(Pi))
             err = c(err, norm(x - Pi, type = "F"))
+        if(max(resid, resid1, resid2) < eps)
+            break
     }
     list(proj = x, z1 = z1, z2 = z2, time_f = time_f, time_p = time_p, time_t = time_f + time_p, error = err)
 }
