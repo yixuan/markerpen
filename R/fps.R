@@ -1,25 +1,4 @@
-# Project x = (x1, ..., xn) to {x: a <= sum(x) <= b, x >= 0}
-proj_pos_simplex_ineq = function(x, a, b)
-{
-    n = length(x)
-    constr = rbind(rep(1, n), rep(-1, n), diag(n))
-    rhs = c(a, -b, rep(0, n))
-    sol = quadprog::solve.QP(Dmat = diag(n), dvec = x, Amat = t(constr), bvec = rhs)
-    sol$solution
-}
-
-proj_constr = function(x, gr, gr_weight)
-{
-    diagx = diag(x)
-    diagx[gr] = proj_pos_simplex_ineq(diagx[gr], gr_weight, 1)
-    w = sum(diagx[gr])
-    diagx[-gr] = proj_pos_simplex(diagx[-gr], 1 - w)
-    x = pmax(x, 0)
-    diag(x) = diagx
-    x
-}
-
-pca_pen_prox = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, alpha = 0.01, eps = 1e-4, Pi = NULL)
+pca_pen_prox = function(S, gr, lambda, gamma = 1.5, alpha = 0.01, maxit = 10, eps = 1e-4, Pi = NULL)
 {
     p = nrow(S)
 
@@ -39,6 +18,10 @@ pca_pen_prox = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, alpha = 0.01
     # Estimation error
     err = c()
 
+    penmat = matrix(gamma * lambda, p, p)
+    penmat[gr, gr] = lambda
+    penmat[-gr, -gr] = gamma^2 * lambda
+
     for(i in 1:maxit)
     {
         newx = (z1 + z2) / 2
@@ -46,9 +29,9 @@ pca_pen_prox = function(S, gr, lambda, gr_weight = 0.8, maxit = 10, alpha = 0.01
         x = newx
 
         t1 = Sys.time()
-        newz1 = z1 - x + prox_fantope(S - lambda, z2, alpha, 1, inc = 30)
+        newz1 = z1 - x + prox_fantope(S - penmat, 2 * x - z1, alpha, 1, inc = 30)
         t2 = Sys.time()
-        newz2 = z2 - x + proj_constr(z1, gr, gr_weight)
+        newz2 = z2 - x + pmax(2 * x - z2, 0)
         t3 = Sys.time()
 
         resid1 = norm(newz1 - z1, type = "F")
