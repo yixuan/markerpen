@@ -1,7 +1,6 @@
 importFrom(Rcpp, evalCpp)
 importFrom(RSpectra, eigs_sym)
-importFrom(quadprog, solve.QP)
 
-export(pca_pen_prox)
+export(pca_pen_prox, pca_pen)
 
 useDynLib(markerpen, .registration = TRUE)

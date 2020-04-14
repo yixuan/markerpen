@@ -1,4 +1,4 @@
-pca_pen_prox = function(S, gr, lambda, gamma = 1.5, alpha = 0.01, maxit = 10, eps = 1e-4, Pi = NULL)
+pca_pen_prox = function(S, gr, lambda, gamma = 1.5, alpha = 0.01, maxit = 10, eps = 1e-4, verbose = 0)
 {
     p = nrow(S)
 
@@ -38,14 +38,29 @@ pca_pen_prox = function(S, gr, lambda, gamma = 1.5, alpha = 0.01, maxit = 10, ep
         resid2 = norm(newz2 - z2, type = "F")
         z1 = newz1
         z2 = newz2
-        cat(sprintf("iter = %d, resid = %f, resid1 = %f, resid2 = %f\n", i, resid, resid1, resid2))
+        if(verbose > 0)
+            cat(sprintf("iter = %d, resid = %f, resid1 = %f, resid2 = %f\n", i, resid, resid1, resid2))
 
         time_f = c(time_f, t2 - t1)
         time_p = c(time_p, t3 - t2)
-        if(!is.null(Pi))
-            err = c(err, norm(x - Pi, type = "F"))
+        err = c(err, resid)
         if(max(resid, resid1, resid2) < eps)
             break
     }
     list(proj = x, z1 = z1, z2 = z2, time_f = time_f, time_p = time_p, time_t = time_f + time_p, error = err)
+}
+
+pca_pen = function(S, gr, lambda, gamma = 1.5, alpha = 0.01, maxit = 10, eps = 1e-4, verbose = 0)
+{
+    p = nrow(S)
+
+    # Ssub = S[gr, gr]
+    # e = RSpectra::eigs_sym(Ssub, 1)
+    # x = matrix(0, p, p)
+    # x[gr, gr] = tcrossprod(e$vectors)
+    # z1 = z2 = x
+
+    e = RSpectra::eigs_sym(S, 1)
+    x0 = tcrossprod(e$vectors)
+    pca_pen_(S, gr, x0, lambda, gamma, alpha, maxit, 100, 10, eps, verbose)
 }
