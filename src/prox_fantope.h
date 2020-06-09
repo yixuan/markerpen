@@ -2,7 +2,7 @@
 #define MARKERPEN_PROX_FANTOPE_H
 
 #include "common.h"
-#include "inceig_tridiag.h"
+#include "inceig_tridiag_lapack.h"
 #include "walltime.h"
 
 // Given x[0] >= x[1] >= ... >= x[n-1], find c such that
@@ -62,17 +62,19 @@ inline double proj_cube_simplex(const double* lambda, int p, int d, double& c, d
 
 // min  -tr(AX) + 0.5 * ||X||_F^2
 // s.t. X in Fantope
-inline int prox_fantope_hard_impl(RefConstMat A, int d, int inc, int maxiter, RefMat res, double& dsum,
-                                  double eps = 1e-3, int verbose = 0)
+inline int prox_fantope_hard_impl(
+    RefConstMat A, int d, int inc, int maxiter, RefMat res, double& dsum,
+    double eps = 1e-3, int verbose = 0
+)
 {
-    VectorXd theta(inc * maxiter + d + 1);
+    Vector theta(inc * maxiter + d + 1);
     IncrementalEig inceig(A.rows());
 
     double t1 = get_wall_time();
     inceig.init(A, inc * maxiter + d + 1, d + 1, 0, 0);
     double t2 = get_wall_time();
 
-    const VectorXd& evals = inceig.largest_eigenvalues();
+    const Vector& evals = inceig.largest_eigenvalues();
     double c;
     double f = proj_cube_simplex(evals.data(), inceig.num_computed_largest(), d, c, theta.data());
     double theta_last = theta[inceig.num_computed_largest() - 1];
@@ -96,7 +98,7 @@ inline int prox_fantope_hard_impl(RefConstMat A, int d, int inc, int maxiter, Re
 
         double t1 = get_wall_time();
         int nops = inceig.compute_next_largest(inc);
-        const VectorXd& evals = inceig.largest_eigenvalues();
+        const Vector& evals = inceig.largest_eigenvalues();
         double t2 = get_wall_time();
 
         double newf = proj_cube_simplex(evals.data(), inceig.num_computed_largest(), d, c, theta.data());

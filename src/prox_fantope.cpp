@@ -28,7 +28,7 @@ Rcpp::NumericMatrix prox_fantope(MapMat A, MapMat B, double alpha, int d,
     if(B.rows() != n || B.cols() != n)
         Rcpp::stop("dimensions of A and B do not change");
 
-    MatrixXd mat = B + alpha * A;
+    Matrix mat = B + alpha * A;
     MapConstMat matm(mat.data(), n, n);
 
     Rcpp::NumericMatrix res(n, n);

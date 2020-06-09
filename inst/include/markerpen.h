@@ -3,14 +3,14 @@
 
 #include <RcppEigen.h>
 
-typedef Eigen::MatrixXd MatrixXd;
-typedef Eigen::VectorXd VectorXd;
-typedef Eigen::Map<MatrixXd> MapMat;
-typedef Eigen::Map<VectorXd> MapVec;
-typedef Eigen::Map<const VectorXd> MapConstVec;
-typedef Eigen::Ref<VectorXd> RefVec;
-typedef Eigen::SparseMatrix<double> SpMat;
-typedef Eigen::Map<SpMat> MapSpMat;
-typedef Eigen::Map<const SpMat> MapConstSpMat;
+using Matrix = Eigen::MatrixXd;
+using Vector = Eigen::VectorXd;
+using MapMat = Eigen::Map<Matrix>;
+using MapVec = Eigen::Map<Vector>;
+using MapConstVec = Eigen::Map<const Vector>;
+using RefVec = Eigen::Ref<Vector>;
+using SpMat = Eigen::SparseMatrix<double>;
+using MapSpMat = Eigen::Map<SpMat>;
+using MapConstSpMat = Eigen::Map<const SpMat>;
 
 #endif  // MARKERPEN_PKG_H

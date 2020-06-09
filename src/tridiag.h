@@ -5,10 +5,18 @@
 #include <cstdlib>
 #include <vector>
 
-#ifdef EIGEN_USE_BLAS
+#ifndef F77_CALL
 #define F77_CALL(x)	x ## _
+#endif
+
+#ifndef F77_NAME
 #define F77_NAME(x) F77_CALL(x)
+#endif
+
+#ifndef La_extern
 #define La_extern extern
+#endif
+
 extern "C" {
 
 La_extern void
@@ -18,12 +26,9 @@ F77_NAME(dgttrf)(const int* n, double* dl, double* d,
 La_extern void
 F77_NAME(dgttrs)(const char* trans, const int* n, const int* nrhs,
                  double* dl, double* d, double* du, double* du2,
-                 int* ipiv, double* b, const int* ldb, int* info FCLEN);
+                 int* ipiv, double* b, const int* ldb, int* info);
 
 }
-#else
-#include <R_ext/Lapack.h>
-#endif
 
 // y = A * x
 // Diagonal:    b[0], ..., b[n-1]
@@ -102,11 +107,11 @@ private:
     ShiftSolver m_solver;
 
     // Working spaces
-    std::vector<double> m_dcache;
-    std::vector<double> m_lcache;
-    std::vector<double> m_ucache;
-    std::vector<double> m_u2cache;
-    std::vector<int> m_icache;
+    mutable std::vector<double> m_dcache;
+    mutable std::vector<double> m_lcache;
+    mutable std::vector<double> m_ucache;
+    mutable std::vector<double> m_u2cache;
+    mutable std::vector<int> m_icache;
 
 public:
     SymTridiag(int n, const double* diag, const double* subdiag) :
@@ -181,12 +186,8 @@ public:
         int info;
         std::copy(x_in, x_in + m_n, y_out);
         F77_CALL(dgttrs)(&trans, &m_n, &nrhs,
-                         const_cast<double*>(&m_lcache[0]),
-                         const_cast<double*>(&m_dcache[0]),
-                         const_cast<double*>(&m_ucache[0]),
-                         const_cast<double*>(&m_u2cache[0]),
-                         const_cast<int*>(&m_icache[0]),
-                         y_out, &m_n, &info);
+                         &m_lcache[0], &m_dcache[0], &m_ucache[0], &m_u2cache[0],
+                         &m_icache[0], y_out, &m_n, &info);
     }
 };
 
