@@ -1,7 +1,7 @@
 importFrom(Rcpp, evalCpp)
 importFrom(RSpectra, eigs_sym)
 
-export(pca_pen_prox, pca_pen)
+export(pca_pen)
 export(sort_markers)
 
 useDynLib(markerpen, .registration = TRUE)
