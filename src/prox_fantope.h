@@ -66,7 +66,7 @@ inline int prox_fantope_hard_impl(RefConstMat A, int d, int inc, int maxiter, Re
                                   double eps = 1e-3, int verbose = 0)
 {
     VectorXd theta(inc * maxiter + d + 1);
-    IncrementalEig inceig;
+    IncrementalEig inceig(A.rows());
 
     double t1 = get_wall_time();
     inceig.init(A, inc * maxiter + d + 1, d + 1, 0, 0);

@@ -19,12 +19,6 @@ F77_NAME(dsytrd)(const char* uplo, const int* n,
                  double* d, double* e, double* tau,
                  double* work, const int* lwork, int* info);
 
-La_extern void
-F77_NAME(dgtsv)(const int* n, const int* nrhs,
-                double* dl, double* d, double* du,
-                double* b, const int* ldb, int* info);
-
-}
 #else
 #include <R_ext/Lapack.h>
 #endif
@@ -38,15 +32,12 @@ private:
     typedef Eigen::Map<const MatrixXd> MapConstMat;
     typedef Eigen::Ref<const MatrixXd> RefConstMat;
 
-    int      m_n;               // Dimension of the matrix
-    MatrixXd m_Q;               // Tridiagonal decomposition, x = QTQ'
-    VectorXd m_tau;             // Scalar factor for Q
-    VectorXd m_diag;            // Diagonal elements of T
-    VectorXd m_subdiag;         // Sub-diagonal elements of T
-
-    VectorXd m_dcache;          // Work space
-    VectorXd m_lcache;          // Work space
-    VectorXd m_ucache;          // Work space
+    const int  m_n;             // Dimension of the matrix
+    MatrixXd   m_Q;             // Tridiagonal decomposition, x = QTQ'
+    VectorXd   m_tau;           // Scalar factor for Q
+    VectorXd   m_diag;          // Diagonal elements of T
+    VectorXd   m_subdiag;       // Sub-diagonal elements of T
+    SymTridiag m_tridiagop;     // Operator for the tridiagonal matrix
 
     VectorXd m_evals_lg;        // Largest eigenvalues
     MatrixXd m_evecs_lg;        // Eigenvectors for largest eigenvalues
@@ -61,8 +52,6 @@ private:
     double   m_shift_lg;        // Current shift for the largest eigenvalues
     double   m_shift_sm;        // Current shift for the smallest eigenvalues
 
-    bool     m_mode;            // To compute the largest eigenvalues (true) or the smallest (false)
-
     // x <- Qx
     //        [  d                  ]
     //        [  e   d              ]
@@ -72,7 +61,7 @@ private:
     // Q = H1 * H2 * ... * Hn-2
     // Hi = I - tau * ui * ui'
     // ui = (0, ..., 0, 1, vi)
-    inline void apply_Qx(double* xptr) const
+    inline void apply_Qx(double* xptr) const noexcept
     {
         int vlen = 1;
         for(int i = m_n - 3; i >= 0; i--, vlen++)
@@ -87,13 +76,19 @@ private:
     }
 
 public:
-    IncrementalEig() {}
+    IncrementalEig(int n):
+        m_n(n), m_Q(n, n), m_tau(n - 1), m_diag(n), m_subdiag(n - 1),
+        m_tridiagop(n, m_diag.data(), m_subdiag.data())
+    {}
 
     // 1. Set the size of the problem
     // 2. Compute initial `init_evals` eigenvalues
     // 3. Tridiagonal factorization for the shift-and-invert mode
     inline void init(const RefConstMat& mat, int max_evals_lg, int init_evals_lg, int max_evals_sm, int init_evals_sm)
     {
+        if(mat.rows() != m_n || mat.cols() != m_n)
+            throw std::invalid_argument("matrix dimensions do not match");
+
         // 1. Set the size of the problem
         m_max_evals_lg = max_evals_lg;
         m_num_computed_lg = 0;
@@ -103,22 +98,10 @@ public:
         m_num_computed_sm = 0;
         m_shift_sm = 0.0;
 
-        m_n = mat.rows();
-        m_Q.resize(m_n, m_n);
-        m_tau.resize(m_n - 1);
-        m_diag.resize(m_n);
-        m_subdiag.resize(m_n - 1);
-
-        m_dcache.resize(m_n);
-        m_lcache.resize(m_n - 1);
-        m_ucache.resize(m_n - 1);
-
         m_evals_lg.resize(m_max_evals_lg);
         m_evecs_lg.resize(m_n, m_max_evals_lg);
         m_evals_sm.resize(m_max_evals_sm);
         m_evecs_sm.resize(m_n, m_max_evals_sm);
-
-        m_mode = true;
 
         // 2. Tridiagonalization
         char uplo = 'L';
@@ -133,7 +116,7 @@ public:
 
         lwork = int(blocksize);
         std::vector<double> work;
-        work.resize(lwork);
+        work.reserve(lwork);
 
         F77_CALL(dsytrd)(&uplo, &m_n,
                  m_Q.data(), &m_n,
@@ -141,11 +124,11 @@ public:
                  &work[0], &lwork, &info);
 
         // 3. Compute initial `init_evals` eigenvalues
-        SymTridiag op(m_n, m_diag.data(), m_subdiag.data());
+        m_tridiagop.set_mode(OpMode::Prod);
         if(init_evals_lg > 0)
         {
             Spectra::SymEigsSolver<double, Spectra::LARGEST_ALGE, SymTridiag>
-            eigs_lg(&op, init_evals_lg, std::min(m_n, std::max(20, init_evals_lg * 2 + 1)));
+            eigs_lg(&m_tridiagop, init_evals_lg, std::min(m_n, std::max(20, init_evals_lg * 2 + 1)));
             eigs_lg.init();
             eigs_lg.compute(1000, 1e-6, Spectra::LARGEST_ALGE);
 
@@ -159,7 +142,7 @@ public:
         if(init_evals_sm > 0)
         {
             Spectra::SymEigsSolver<double, Spectra::SMALLEST_ALGE, SymTridiag>
-            eigs_sm(&op, init_evals_sm, std::min(m_n, std::max(20, init_evals_sm * 2 + 1)));
+            eigs_sm(&m_tridiagop, init_evals_sm, std::min(m_n, std::max(20, init_evals_sm * 2 + 1)));
             eigs_sm.init();
             eigs_sm.compute(1000, 1e-6, Spectra::SMALLEST_ALGE);
 
@@ -171,48 +154,18 @@ public:
         }
     }
 
-    inline int rows() const { return m_n; }
-    inline int cols() const { return m_n; }
-
-    // y = solve(s * I - T, x)
-    inline void perform_op(const double* x_in, double* y_out)
-    {
-        const double shift = m_mode ? m_shift_lg : m_shift_sm;
-        // First use the fast solver
-        // If not stable (divided-by-zero), use the LAPACK function
-        int info = tridiag_shift_solve(
-            m_n, m_diag.data(), m_subdiag.data(), x_in, shift, y_out,
-            m_lcache.data(), m_dcache.data()
-        );
-        if(info == 0)
-        {
-            // Negate y
-            std::transform(y_out, y_out + m_n, y_out, std::negate<double>());
-            return;
-        }
-
-        // Otherwise, use LAPACK
-        std::copy(x_in, x_in + m_n, y_out);
-
-        m_dcache.array() = shift - m_diag.array();
-        m_lcache.noalias() = -m_subdiag;
-        m_ucache.noalias() = -m_subdiag;
-
-        int nrhs = 1;
-        F77_CALL(dgtsv)(&m_n, &nrhs, m_lcache.data(), m_dcache.data(), m_ucache.data(),
-                 y_out, &m_n, &info);
-        if(info != 0)
-            throw std::runtime_error("failed to compute eigenvalues");
-    }
-
     inline int compute_next_largest(int inc_evals)
     {
-        m_mode = true;
         if(m_num_computed_lg + inc_evals > std::min(m_n, m_max_evals_lg))
             throw std::logic_error("maximum number of eigenvalues computed");
 
-        Spectra::SymEigsSolver<double, Spectra::LARGEST_ALGE, IncrementalEig>
-            eigs(this, inc_evals, std::min(m_n, std::max(20, inc_evals * 2 + 1)));
+        m_tridiagop.set_mode(OpMode::ShiftSolve);
+        bool success = m_tridiagop.factorize(m_shift_lg);
+        if(!success)
+            throw std::runtime_error("failed to compute eigenvalues");
+
+        Spectra::SymEigsSolver<double, Spectra::LARGEST_ALGE, SymTridiag>
+            eigs(&m_tridiagop, inc_evals, std::min(m_n, std::max(20, inc_evals * 2 + 1)));
         eigs.init();
         eigs.compute(1000, 1e-6, Spectra::LARGEST_ALGE);
 
@@ -227,12 +180,16 @@ public:
 
     inline int compute_next_smallest(int inc_evals)
     {
-        m_mode = false;
         if(m_num_computed_sm + inc_evals > std::min(m_n, m_max_evals_sm))
             throw std::logic_error("maximum number of eigenvalues computed");
 
-        Spectra::SymEigsSolver<double, Spectra::SMALLEST_ALGE, IncrementalEig>
-            eigs(this, inc_evals, std::min(m_n, std::max(20, inc_evals * 2 + 1)));
+        m_tridiagop.set_mode(OpMode::ShiftSolve);
+        bool success = m_tridiagop.factorize(m_shift_sm);
+        if(!success)
+            throw std::runtime_error("failed to compute eigenvalues");
+
+        Spectra::SymEigsSolver<double, Spectra::SMALLEST_ALGE, SymTridiag>
+            eigs(&m_tridiagop, inc_evals, std::min(m_n, std::max(20, inc_evals * 2 + 1)));
         eigs.init();
         eigs.compute(1000, 1e-6, Spectra::SMALLEST_ALGE);
 
@@ -245,7 +202,7 @@ public:
         return eigs.num_operations();
     }
 
-    inline void compute_eigenvectors(int num_lg, int num_sm)
+    inline void compute_eigenvectors(int num_lg, int num_sm) noexcept
     {
         #pragma omp parallel for shared(m_evecs_lg)
         for(int i = 0; i < num_lg; i++)

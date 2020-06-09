@@ -11,3 +11,4 @@ Encoding: UTF-8
 LazyData: true
 Imports: Rcpp (>= 1.0.1), RSpectra
 LinkingTo: Rcpp, RcppEigen, RSpectra
+SystemRequirements: C++11
