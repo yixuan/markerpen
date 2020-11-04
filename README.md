@@ -142,7 +142,7 @@ Published markers:
 vis_cor(mat_exp, pub_markers)
 ```
 
-<img src="example/published_markers.png" alt="published markers" width="600px" />
+<img src="example/published_markers.png" alt="published markers" width="450px" />
 
 Refined markers:
 
@@ -150,7 +150,7 @@ Refined markers:
 vis_cor(mat_exp, markers_re)
 ```
 
-<img src="example/refined_markers.png" alt="refined markers" width="600px" />
+<img src="example/refined_markers.png" alt="refined markers" width="450px" />
 
 Ordered top 50 markers for each cell type:
 
@@ -158,4 +158,4 @@ Ordered top 50 markers for each cell type:
 vis_cor(mat_exp, markers_ord)
 ```
 
-<img src="example/ordered_markers.png" alt="ordered markers" width="600px" />
+<img src="example/ordered_markers.png" alt="ordered markers" width="450px" />
