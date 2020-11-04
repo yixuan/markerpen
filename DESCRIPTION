@@ -1,14 +1,17 @@
 Package: markerpen
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Marker Gene Detection via Penalized Principal Component Analysis
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Yixuan Qiu, Jiebiao Wang, Jing Lei, and Kathryn Roeder
+Maintainer: Yixuan Qiu <yixuan.qiu@cos.name>
+Description: Implementation of the MarkerPen algorithm, short for marker gene detection
+    via penalized principal component analysis. MarkerPen is a semi-supervised algorithm
+    for detecting marker genes by combining prior marker information with bulk
+    transcriptome data.
+License: GPL
 Encoding: UTF-8
 LazyData: true
 Imports: Rcpp (>= 1.0.1), RSpectra
 LinkingTo: Rcpp, RcppEigen, RSpectra
 SystemRequirements: C++11
+RoxygenNote: 7.1.1
