@@ -1,4 +1,4 @@
-## MarkerPen
+## MarkerPen<img src="https://statr.me/images/sticker-markerpen.png" alt="markerpen" height="150px" align="right" />
 
 The `markerpen` R package uses penalized principal component analysis to
 detect cell-type-specific marker genes from bulk tissue RNA sequencing data.
