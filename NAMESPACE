@@ -3,5 +3,6 @@ importFrom(RSpectra, eigs_sym)
 
 export(pca_pen)
 export(sort_markers)
+export(refine_markers)
 
 useDynLib(markerpen, .registration = TRUE)
