@@ -53,7 +53,56 @@
 #     list(proj = x, z1 = z1, z2 = z2, time_f = time_f, time_p = time_p, time_t = time_f + time_p, error = err)
 # }
 
-pca_pen = function(S, gr, lambda, gamma = 1.5, alpha = 0.01, maxit = 10, eps = 1e-4, verbose = 0)
+##' Penalized Principal Component Analysis for Marker Gene Selection
+##'
+##' This function solves the optimization problem
+##' \deqn{\min\quad-tr(SX) + \lambda p(X),}{min -tr(SX) + \lambda * p(X),}
+##' \deqn{s.t.\quad O\preceq X \preceq I, X \ge 0, \text{and} tr(X)=1,}{s.t. O ≼ X ≼ I, X \ge 0, and tr(X) = 1,}
+##' where \eqn{O\preceq X \preceq I}{O ≼ X ≼ I} means all eigenvalues of \eqn{X} are
+##' between 0 and 1, \eqn{X \ge 0} means all elements of \eqn{X} are nonnegative,
+##' and \eqn{p(X)} is a penalty function defined in the article
+##' (see the \strong{References} section).
+##'
+##' @param S       The sample correlation matrix of gene expression.
+##' @param gr      Indices of genes that are treated as markers in the prior information.
+##' @param lambda  Tuning parameter to control the sparsity of eigenvectors.
+##' @param w       Tuning parameter to control the weight on prior information.
+##'                Larger \eqn{w} means genes not in the prior list are less likely
+##'                to be selected as markers.
+##' @param alpha   Step size of the optimization algorithm.
+##' @param maxit   Maximum number of iterations.
+##' @param eps     Tolerance parameter for convergence.
+##' @param verbose Level of verbosity.
+##'
+##' @examples set.seed(123)
+##' n = 200  # Sample size
+##' p = 500  # Number of genes
+##' s = 50   # Number of true signals
+##'
+##' # The first s genes are true markers, and others are noise
+##' Sigma = matrix(0, p, p)
+##' Sigma[1:s, 1:s] = 0.9
+##' diag(Sigma) = 1
+##'
+##' # Simulate data from the covariance matrix
+##' x = matrix(rnorm(n * p), n) %*% chol(Sigma)
+##'
+##' # Sample correlation matrix
+##' S = cor(x)
+##'
+##' # Indices of prior marker genes
+##' # Note that we have omitted 10 true markers, and included 10 false markers
+##' gr = c(1:(s - 10), (s + 11):(s + 20))
+##'
+##' # Run the algorithm
+##' res = pca_pen(S, gr, lambda = 0.1, verbose = 1)
+##'
+##' # See if we can recover the true correlation structure
+##' image(res$projection, asp = 1)
+##'
+##' @references Qiu, Y., Wang, J., Lei, J., & Roeder, K. (2020).
+##' Identification of cell-type-specific marker genes from co-expression patterns in tissue samples.
+pca_pen = function(S, gr, lambda, w = 1.5, alpha = 0.01, maxit = 1000, eps = 1e-4, verbose = 0)
 {
     p = nrow(S)
 
@@ -65,5 +114,8 @@ pca_pen = function(S, gr, lambda, gamma = 1.5, alpha = 0.01, maxit = 10, eps = 1
 
     e = RSpectra::eigs_sym(S, 1)
     x0 = tcrossprod(e$vectors)
-    pca_pen_(S, gr, x0, lambda, gamma, alpha, maxit, 100, 10, eps, verbose)
+    pca_pen_(
+        S, gr, x0, lambda, w, alpha, maxit,
+        fan_maxinc = 100, fan_maxiter = 10, eps = eps, verbose = verbose
+    )
 }
