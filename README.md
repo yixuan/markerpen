@@ -3,7 +3,10 @@
 The `markerpen` R package uses penalized principal component analysis to
 detect cell-type-specific marker genes from bulk tissue RNA sequencing data.
 It is a semi-supervised algorithm that uses bulk transcriptome data to
-refine a prior marker gene list.
+refine a prior marker gene list, based on the paper
+[Identification of cell-type-specific marker genes from co-expression
+patterns in tissue samples](https://www.biorxiv.org/content/10.1101/2020.11.07.373043v1)
+by Yixuan Qiu, Jiebiao Wang, Jing Lei, and Kathryn Roeder.
 
 ### Installation
 
