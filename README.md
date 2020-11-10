@@ -159,3 +159,21 @@ vis_cor(mat_exp, markers_ord)
 ```
 
 <img src="example/ordered_markers.png" alt="ordered markers" width="450px" />
+
+### Citation
+
+Please consider to cite our work if you have used our algorithm or package in your research.
+
+```
+@article{Qiu2020.11.07.373043,
+    author = {Qiu, Yixuan and Wang, Jiebiao and Lei, Jing and Roeder, Kathryn},
+    title = {Identification of cell-type-specific marker genes from co-expression patterns in tissue samples},
+    elocation-id = {2020.11.07.373043},
+    year = {2020},
+    doi = {10.1101/2020.11.07.373043},
+    publisher = {Cold Spring Harbor Laboratory},
+    URL = {https://www.biorxiv.org/content/early/2020/11/08/2020.11.07.373043},
+    eprint = {https://www.biorxiv.org/content/early/2020/11/08/2020.11.07.373043.full.pdf},
+    journal = {bioRxiv}
+}
+```
