@@ -7,17 +7,18 @@ refine a prior marker gene list.
 
 ### Installation
 
-`markerpen` can be installed just like any other R packages hosted on GitHub. For `devtools` users, the following command should work on most platforms:
+`markerpen` can be installed directly from CRAN:
 
 ```r
-library(devtools)
-install_github("yixuan/markerpen")
+install.packages("markerpen")
 ```
 
-Note that a C++ compiler that supports the C++11 standard is needed.
+A C++ compiler that supports the C++11 standard is needed to install `markerpen`
+from source.
+
 For best performance, it is **strongly suggested** linking your R to the
-[OpenBLAS](https://www.openblas.net/) library for matrix computation.
-You can achieve this with the help of the
+[OpenBLAS](https://www.openblas.net/) library for matrix computation, although
+this step is optional. You can achieve this with the help of the
 [ropenblas](https://prdm0.github.io/ropenblas/) package.
 
 ### Example
@@ -35,10 +36,10 @@ library(scales)
 # Download data
 # A subset of the ROSMAP data
 dat_url = "https://github.com/ellispatrick/CortexCellDeconv/blob/master/CellTypeDeconvAnalysis/Data/geneExprRaw.txt?raw=true"
-download.file(dat_url, destfile = "example/geneExprRaw.txt", method = "libcurl")
+download.file(dat_url, destfile = "geneExprRaw.txt", method = "libcurl")
 
 # Read in data - rows are genes, columns are observations
-dat = read.table("example/geneExprRaw.txt", header = TRUE)
+dat = read.table("geneExprRaw.txt", header = TRUE)
 # Normalize read count
 dat_norm = sweep(dat, 2, colSums(dat), "/")
 # Convert gene name to Ensembl name
@@ -60,42 +61,49 @@ X20214850    9.708929e-06    9.450005e-05    1.316315e-05    2.276931e-05    4.7
 ```
 
 Next, read in the prior marker gene lists, collected from the published
-literature. The R data files are provided in the `example` folder.
+literature. We also restrict the search range for each cell type to a subset of the
+whole genome.
+
+The two R data files are provided in the `vignettes` folder.
 
 ```r
 # Read in prior marker genes
-load("example/published_markers.RData")
-load("example/markers_range.RData")
+load("vignettes/published_markers.RData")
+load("vignettes/markers_range.RData")
 ```
 
-The main part of the analysis: selecting marker genes for major
-cell types.
+Below is the main part of the analysis: selecting marker genes for major
+cell types. After obtaining the marker genes for one cell type, we remove those
+genes from the search range for the next cell type, in order to make markers for
+different cell types non-overlapping. Theoretically the order of
+the cell types in computing has an impact on the final result, but in practice
+the impact is small if the cell types can be well separated.
 
 ```r
 # Markers for astrocytes
 ast_re = refine_markers(mat_exp, markers_range$astrocytes, pub_markers$astrocytes,
-                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 1)
+                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 0)
 # Remove selected markers from the expression matrix
 mat_rest = mat_exp[, setdiff(colnames(mat_exp), ast_re$markers)]
 
 # Markers for oligodendrocytes
 oli_re = refine_markers(mat_rest, markers_range$oligodendrocytes, pub_markers$oligodendrocytes,
-                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 1)
+                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 0)
 mat_rest = mat_rest[, setdiff(colnames(mat_rest), oli_re$markers)]
 
 # Markers for microglia
 mic_re = refine_markers(mat_rest, markers_range$microglia, pub_markers$microglia,
-                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 1)
+                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 0)
 mat_rest = mat_rest[, setdiff(colnames(mat_rest), mic_re$markers)]
 
 # Markers for endothelial
 end_re = refine_markers(mat_rest, markers_range$endothelial, pub_markers$endothelial,
-                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 1)
+                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 0)
 mat_rest = mat_rest[, setdiff(colnames(mat_rest), end_re$markers)]
 
 # Markers for neurons
 neu_re = refine_markers(mat_rest, markers_range$neurons, pub_markers$neurons,
-                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 1)
+                        lambda = 0.4, w = 1.5, maxit = 500, verbose = 0)
 
 # Refined markers
 markers_re = list(astrocytes       = ast_re$markers,
@@ -126,12 +134,16 @@ vis_cor = function(mat_exp, markers)
     all_genes = colnames(mat_exp)
     markers = intersect(unlist(markers), all_genes)
     cor_markers = cor(mat_exp[, unlist(markers)])
+    p = nrow(cor_markers)
 
-    cols = c("#D73027", "#FC8D59", "#FEE090", "#FFFFFF", "#E0F3F8", "#91BFDB", "#4575B4")
+    cols = c("#08306b", "#08519c", "#2171b5", "#6baed6", "#9ecae1", "#c6dbef", "#deebf7",
+             "#ffffff",
+             "#fcf1f1", "#fae1e1", "#facdcd", "#f49c9c", "#f56566", "#f13a3c", "#d00003")
+
     ncols = length(cols)
     cols = scales::gradient_n_pal(cols, values = (0:ncols) / ncols)((1:100) / 100)
     op = par(mar = c(0, 0, 0, 0))
-    image(cor_markers, col = cols, breaks = (-50:50) / 50, asp = 1, axes = FALSE)
+    image(cor_markers[, p:1], col = cols, breaks = (-50:50) / 50, asp = 1, axes = FALSE)
     par(op)
 }
 ```
@@ -142,15 +154,18 @@ Published markers:
 vis_cor(mat_exp, pub_markers)
 ```
 
-<img src="example/published_markers.png" alt="published markers" width="450px" />
-
+<div align="center">
+  <img src="vignettes/published_markers.png" alt="published markers" width="450px" />
+</div>
 Refined markers:
 
 ```r
 vis_cor(mat_exp, markers_re)
 ```
 
-<img src="example/refined_markers.png" alt="refined markers" width="450px" />
+<div align="center">
+  <img src="vignettes/refined_markers.png" alt="refined markers" width="450px" />
+</div>
 
 Ordered top 50 markers for each cell type:
 
@@ -158,4 +173,6 @@ Ordered top 50 markers for each cell type:
 vis_cor(mat_exp, markers_ord)
 ```
 
-<img src="example/ordered_markers.png" alt="ordered markers" width="450px" />
+<div align="center">
+  <img src="vignettes/ordered_markers.png" alt="ordered markers" width="450px" />
+</div>
