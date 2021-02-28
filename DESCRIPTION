@@ -2,6 +2,7 @@ Package: markerpen
 Type: Package
 Title: Marker Gene Detection via Penalized Principal Component Analysis
 Version: 0.1.0
+Date: 2021-02-28
 Author: Yixuan Qiu, Jiebiao Wang, Jing Lei, and Kathryn Roeder
 Maintainer: Yixuan Qiu <yixuan.qiu@cos.name>
 Description: Implementation of the MarkerPen algorithm, short for marker gene detection
@@ -13,5 +14,7 @@ Encoding: UTF-8
 LazyData: true
 Imports: Rcpp (>= 1.0.1), RSpectra
 LinkingTo: Rcpp, RcppEigen, RSpectra
+Suggests: knitr, rmarkdown, prettydoc
 SystemRequirements: C++11
+VignetteBuilder: knitr, rmarkdown
 RoxygenNote: 7.1.1
