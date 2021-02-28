@@ -215,12 +215,16 @@ public:
 
     inline void compute_eigenvectors(int num_lg, int num_sm) noexcept
     {
-        #pragma omp parallel for shared(m_evecs_lg)
+#if defined(_OPENMP)
+        #pragma omp parallel for
+#endif
         for(int i = 0; i < num_lg; i++)
         {
             apply_Qx(&m_evecs_lg(0, i));
         }
-        #pragma omp parallel for shared(m_evecs_sm)
+#if defined(_OPENMP)
+        #pragma omp parallel for
+#endif
         for(int i = 0; i < num_sm; i++)
         {
             apply_Qx(&m_evecs_sm(0, i));

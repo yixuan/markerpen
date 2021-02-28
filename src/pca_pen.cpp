@@ -72,7 +72,9 @@ public:
         const double* pfp = m_work.data();
         double diff = 0.0;
 
+#if defined(_OPENMP)
         #pragma omp simd aligned(z1p, z2p, pfp: 32)
+#endif
         for(int i = 0; i < m_pp; i++)
         {
             const double newz1 = 0.5 * (z1p[i] - z2p[i]) + pfp[i];
@@ -100,7 +102,9 @@ public:
         double* z2p = m_z2.data();
         double diff = 0.0;
 
+#if defined(_OPENMP)
         #pragma omp simd aligned(z1p, z2p: 32)
+#endif
         for(int i = 0; i < m_pp; i++)
         {
             const double z1 = z1p[i];
