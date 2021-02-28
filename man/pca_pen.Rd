@@ -36,8 +36,8 @@ to be selected as markers.}
 }
 \description{
 This function solves the optimization problem
-\deqn{\min\quad-tr(SX) + \lambda p(X),}{min -tr(SX) + \lambda * p(X),}
-\deqn{s.t.\quad O\preceq X \preceq I, X \ge 0, \text{and} tr(X)=1,}{s.t. O ≼ X ≼ I, X \ge 0, and tr(X) = 1,}
+\deqn{\min\quad-\mathrm{tr}(SX) + \lambda p(X),}{min -tr(SX) + \lambda * p(X),}
+\deqn{s.t.\quad O\preceq X \preceq I, \quad X \ge 0, \quad\mathrm{and}\quad \mathrm{tr}(X)=1,}{s.t. O ≼ X ≼ I, X \ge 0, and tr(X) = 1,}
 where \eqn{O\preceq X \preceq I}{O ≼ X ≼ I} means all eigenvalues of \eqn{X} are
 between 0 and 1, \eqn{X \ge 0} means all elements of \eqn{X} are nonnegative,
 and \eqn{p(X)} is a penalty function defined in the article
