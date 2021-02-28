@@ -12,7 +12,8 @@ Description: Implementation of the MarkerPen algorithm, short for marker gene de
 License: GPL
 Encoding: UTF-8
 LazyData: true
-Imports: Rcpp (>= 1.0.1), RSpectra
+Depends: R (>= 3.5.0)
+Imports: Rcpp (>= 1.0.1), RSpectra, stats
 LinkingTo: Rcpp, RcppEigen, RSpectra
 Suggests: knitr, rmarkdown, prettydoc
 SystemRequirements: C++11
