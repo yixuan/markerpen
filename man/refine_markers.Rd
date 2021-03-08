@@ -44,9 +44,61 @@ to be selected as markers.}
 
 \item{verbose}{Level of verbosity.}
 }
+\value{
+A list containing the following components:
+\describe{
+  \item{spca}{The sparse PCA result as in \code{\link{pca_pen}()}.}
+  \item{markers}{A character vector of selected markers genes.}
+  \item{markers_coef}{The estimated factor loadings for the associated genes.}
+}
+}
 \description{
 This function refines a prior marker gene list by combining information from bulk
 tissue data, based on the penalized principal component analysis. The current
 implementation computes on one cell type at a time. To get marker genes for
 multiple cell types, call this function iteratively.
+}
+\examples{
+# Data used in the vignette
+load(system.file("examples", "gene_expr.RData", package = "markerpen"))
+load(system.file("examples", "published_markers.RData", package = "markerpen"))
+load(system.file("examples", "markers_range.RData", package = "markerpen"))
+
+# Get expression matrix - rows are observations, columns are genes
+ind = match(rownames(dat), markerpen::gene_mapping$name)
+ind = na.omit(ind)
+ensembl = markerpen::gene_mapping$ensembl[ind]
+mat_exp = t(dat[markerpen::gene_mapping$name[ind], ])
+colnames(mat_exp) = ensembl
+
+# We compute the marker genes for two cell types here
+# See the vignette for the full example
+
+# Markers for astrocytes
+ast_re = refine_markers(mat_exp, markers_range$astrocytes, pub_markers$astrocytes,
+                        lambda = 0.45, w = 1.5, maxit = 500, eps = 1e-3, verbose = 0)
+# Remove selected markers from the expression matrix
+mat_rest = mat_exp[, setdiff(colnames(mat_exp), ast_re$markers)]
+
+# Markers for oligodendrocytes
+oli_re = refine_markers(mat_rest, markers_range$oligodendrocytes, pub_markers$oligodendrocytes,
+                        lambda = 0.45, w = 1.5, maxit = 500, eps = 1e-3, verbose = 0)
+
+# Refined markers
+markers_re = list(astrocytes       = ast_re$markers,
+                  oligodendrocytes = oli_re$markers)
+
+# Post-process selected markers
+# Pick the first 50 ordered markers
+cor_markers = cor(mat_exp[, unlist(markers_re)])
+markers_ord = sort_markers(cor_markers, markers_re)
+markers_ord = lapply(markers_ord, head, n = 50)
+
+# Visualize the correlation matrix
+image(cor(mat_exp[, unlist(markers_ord)]), asp = 1)
+
+}
+\references{
+Qiu, Y., Wang, J., Lei, J., & Roeder, K. (2020).
+Identification of cell-type-specific marker genes from co-expression patterns in tissue samples.
 }

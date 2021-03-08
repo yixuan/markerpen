@@ -34,6 +34,15 @@ to be selected as markers.}
 
 \item{verbose}{Level of verbosity.}
 }
+\value{
+A list containing the following components:
+\describe{
+  \item{projection}{The estimated projection matrix.}
+  \item{evecs}{The estimated eigenvectors.}
+  \item{niter}{Number of iterations used in the optimization process.}
+  \item{err_v}{The optimization error in each iteration.}
+}
+}
 \description{
 This function solves the optimization problem
 \deqn{\min\quad-\mathrm{tr}(SX) + \lambda p(X),}{min -tr(SX) + \lambda * p(X),}

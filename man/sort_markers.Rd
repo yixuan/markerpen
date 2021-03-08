@@ -13,6 +13,11 @@ sort_markers(corr, markers)
 gene names corresponding to a cell type. All the gene names in this list
 must appear in the row/column names of \code{corr}.}
 }
+\value{
+A list that has the same structure as the input \code{markers} argument, with
+        the elements in each component reordered. See the example in
+        \code{\link{refine_markers}()}.
+}
 \description{
 This function reorders the selected marker genes using information of the sample
 correlation matrix.
