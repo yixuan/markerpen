@@ -64,12 +64,12 @@ Next, read in the prior marker gene lists, collected from the published
 literature. We also restrict the search range for each cell type to a subset of the
 whole genome.
 
-The two R data files are provided in the `vignettes` folder.
+The two R data files are provided in the `examples` folder.
 
 ```r
 # Read in prior marker genes
-load("vignettes/published_markers.RData")
-load("vignettes/markers_range.RData")
+load(system.file("examples", "published_markers.RData", package = "markerpen"))
+load(system.file("examples", "markers_range.RData", package = "markerpen"))
 ```
 
 Below is the main part of the analysis: selecting marker genes for major
@@ -155,7 +155,7 @@ vis_cor(mat_exp, pub_markers)
 ```
 
 <div align="center">
-  <img src="vignettes/published_markers.png" alt="published markers" width="450px" />
+  <img src="inst/examples/published_markers.png" alt="published markers" width="450px" />
 </div>
 Refined markers:
 
@@ -164,7 +164,7 @@ vis_cor(mat_exp, markers_re)
 ```
 
 <div align="center">
-  <img src="vignettes/refined_markers.png" alt="refined markers" width="450px" />
+  <img src="inst/examples/refined_markers.png" alt="refined markers" width="450px" />
 </div>
 
 Ordered top 50 markers for each cell type:
@@ -174,5 +174,5 @@ vis_cor(mat_exp, markers_ord)
 ```
 
 <div align="center">
-  <img src="vignettes/ordered_markers.png" alt="ordered markers" width="450px" />
+  <img src="inst/examples/ordered_markers.png" alt="ordered markers" width="450px" />
 </div>
