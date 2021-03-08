@@ -28,28 +28,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// prox_fantope
-Rcpp::NumericMatrix prox_fantope(MapMat A, MapMat B, double alpha, int d, double eps, int inc, int maxiter, int verbose);
-RcppExport SEXP _markerpen_prox_fantope(SEXP ASEXP, SEXP BSEXP, SEXP alphaSEXP, SEXP dSEXP, SEXP epsSEXP, SEXP incSEXP, SEXP maxiterSEXP, SEXP verboseSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< MapMat >::type A(ASEXP);
-    Rcpp::traits::input_parameter< MapMat >::type B(BSEXP);
-    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< int >::type d(dSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< int >::type inc(incSEXP);
-    Rcpp::traits::input_parameter< int >::type maxiter(maxiterSEXP);
-    Rcpp::traits::input_parameter< int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(prox_fantope(A, B, alpha, d, eps, inc, maxiter, verbose));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_markerpen_pca_pen_", (DL_FUNC) &_markerpen_pca_pen_, 11},
-    {"_markerpen_prox_fantope", (DL_FUNC) &_markerpen_prox_fantope, 8},
     {NULL, NULL, 0}
 };
 

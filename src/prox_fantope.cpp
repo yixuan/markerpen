@@ -17,7 +17,6 @@
 //' @param inc     How many incremental eigenvalues to compute in each iteration.
 //' @param maxiter Maximum number of iterations.
 //' @param verbose Level of verbosity.
-// [[Rcpp::export]]
 Rcpp::NumericMatrix prox_fantope(MapMat A, MapMat B, double alpha, int d,
                                  double eps = 1e-5, int inc = 1, int maxiter = 10,
                                  int verbose = 0)
