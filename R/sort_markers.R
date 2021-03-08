@@ -7,6 +7,10 @@
 ##' @param markers A list of marker genes. Each component of the list is a vector of marker
 ##'                gene names corresponding to a cell type. All the gene names in this list
 ##'                must appear in the row/column names of \code{corr}.
+##'
+##' @return A list that has the same structure as the input \code{markers} argument, with
+##'         the elements in each component reordered. See the example in
+##'         \code{\link{refine_markers}()}.
 sort_markers = function(corr, markers)
 {
     gene_names = rownames(corr)

@@ -74,6 +74,14 @@
 ##' @param eps     Tolerance parameter for convergence.
 ##' @param verbose Level of verbosity.
 ##'
+##' @return A list containing the following components:
+##' \describe{
+##'   \item{projection}{The estimated projection matrix.}
+##'   \item{evecs}{The estimated eigenvectors.}
+##'   \item{niter}{Number of iterations used in the optimization process.}
+##'   \item{err_v}{The optimization error in each iteration.}
+##' }
+##'
 ##' @examples set.seed(123)
 ##' n = 200  # Sample size
 ##' p = 500  # Number of genes
@@ -114,8 +122,9 @@ pca_pen = function(S, gr, lambda, w = 1.5, alpha = 0.01, maxit = 1000, eps = 1e-
 
     e = RSpectra::eigs_sym(S, 1)
     x0 = tcrossprod(e$vectors)
-    pca_pen_(
+    res = pca_pen_(
         S, gr, x0, lambda, w, alpha, maxit,
         fan_maxinc = 100, fan_maxiter = 10, eps = eps, verbose = verbose
     )
+    res[c("projection", "evecs", "niter", "err_v")]
 }
