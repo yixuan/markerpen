@@ -71,29 +71,41 @@ ensembl = markerpen::gene_mapping$ensembl[ind]
 mat_exp = t(dat[markerpen::gene_mapping$name[ind], ])
 colnames(mat_exp) = ensembl
 
-# We compute the marker genes for two cell types here
+# We compute the marker genes for two cell types with a reduced problem size
 # See the vignette for the full example
 
 # Markers for astrocytes
-ast_re = refine_markers(mat_exp, markers_range$astrocytes, pub_markers$astrocytes,
-                        lambda = 0.45, w = 1.5, maxit = 500, eps = 1e-3, verbose = 0)
+set.seed(123)
+search_range = intersect(markers_range$astrocytes, ensembl)
+search_range = sample(search_range, 300)
+prior_markers = intersect(pub_markers$astrocytes, search_range)
+ast_re = refine_markers(
+    mat_exp, search_range, prior_markers,
+    lambda = 0.35, w = 1.5, maxit = 500, eps = 1e-3, verbose = 0
+)
 # Remove selected markers from the expression matrix
 mat_rest = mat_exp[, setdiff(colnames(mat_exp), ast_re$markers)]
 
-# Markers for oligodendrocytes
-oli_re = refine_markers(mat_rest, markers_range$oligodendrocytes, pub_markers$oligodendrocytes,
-                        lambda = 0.45, w = 1.5, maxit = 500, eps = 1e-3, verbose = 0)
+# Markers for microglia
+search_range = intersect(markers_range$microglia, ensembl)
+search_range = sample(search_range, 300)
+prior_markers = intersect(pub_markers$microglia, search_range)
+mic_re = refine_markers(
+    mat_exp, search_range, prior_markers,
+    lambda = 0.35, w = 1.5, maxit = 500, eps = 1e-3, verbose = 0
+)
 
 # Refined markers
-markers_re = list(astrocytes       = ast_re$markers,
-                  oligodendrocytes = oli_re$markers)
-
-# Post-process selected markers
-# Pick the first 50 ordered markers
+markers_re = list(astrocytes = ast_re$markers,
+                  microglia  = mic_re$markers)
+# Visualize the correlation matrix
 cor_markers = cor(mat_exp[, unlist(markers_re)])
-markers_ord = sort_markers(cor_markers, markers_re)
-markers_ord = lapply(markers_ord, head, n = 50)
+image(cor_markers, asp = 1)
 
+# Post-process the selected markers
+# Pick the first 20 ordered markers
+markers_ord = sort_markers(cor_markers, markers_re)
+markers_ord = lapply(markers_ord, head, n = 20)
 # Visualize the correlation matrix
 image(cor(mat_exp[, unlist(markers_ord)]), asp = 1)
 
