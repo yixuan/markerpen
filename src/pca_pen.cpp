@@ -118,7 +118,7 @@ public:
 
     // Returns ||UU' - VV'||_F, U = new eigenvectors, V = old eigenvectors
     // m_ework needs to be initialized by init(compute_diff_evec = true)
-    inline double update_evecs()
+    inline double update_evecs(bool first_iter = false)
     {
         Matrix& x = m_work;
         x.noalias() = 0.5 * (m_z1 + m_z2);
@@ -129,7 +129,10 @@ public:
         eigs.compute();
 
         m_ework.noalias() = eigs.eigenvectors();
-        double diff = projection_diff(m_ework, m_evecs);
+        double diff = std::numeric_limits<double>::infinity();
+        // Only compute the difference when ther exist old eigenvectors
+        if(!first_iter)
+            diff = projection_diff(m_ework, m_evecs);
         m_ework.swap(m_evecs);
         return std::sqrt(diff);
     }
@@ -201,7 +204,8 @@ List pca_pen_(MapMat S, IntegerVector gr, MapMat x0, double lambda, double gamma
         double diffz2 = opt.update_z2(lr, verbose);
         err_z2.push_back(diffz2);
 
-        double diffev = opt.update_evecs();
+        bool first_iter = (i == 0);
+        double diffev = opt.update_evecs(first_iter);
 
         if(i > 0)
         {
