@@ -82,7 +82,7 @@ different cell types non-overlapping. Theoretically the order of
 the cell types in computing has an impact on the final result, but in practice
 the impact is small if the cell types can be well separated.
 
-```{r refine}
+```{r refine, eval=FALSE}
 # Markers for astrocytes
 ast_re = refine_markers(mat_exp, markers_range$astrocytes, pub_markers$astrocytes,
                         lambda = 0.45, w = 1.5, maxit = 500, eps = 1e-3, verbose = 0)
@@ -114,6 +114,12 @@ markers_re = list(astrocytes       = ast_re$markers,
                   microglia        = mic_re$markers,
                   endothelial      = end_re$markers,
                   neurons          = neu_re$markers)
+```
+
+```{r precompute-refine, echo=FALSE}
+# Computing the refined markers may be slow on some machines
+# So we load the pre-computed data
+load(system.file("examples", "refined_markers.RData", package = "markerpen"))
 ```
 
 We post-process the selected genes by ordering them and selecting
