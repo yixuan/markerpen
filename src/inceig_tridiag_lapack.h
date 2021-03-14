@@ -81,8 +81,8 @@ private:
         lwork = int(blocksize);
         liwork = iblocksize;
 
-        m_workarr.reserve(lwork);
-        m_iworkarr.reserve(liwork);
+        m_workarr.resize(lwork);
+        m_iworkarr.resize(liwork);
 
         F77_CALL(dstegr)(&jobz, &range, &n, m_workd.data(), m_worke.data(), NULL, NULL,
                  &il, &iu, NULL,
@@ -166,8 +166,7 @@ public:
                  &blocksize, &lwork, &info);
 
         lwork = int(blocksize);
-        std::vector<double> work;
-        work.reserve(lwork);
+        std::vector<double> work(lwork);
 
         F77_CALL(dsytrd)(&uplo, &m_n,
                  m_Q.data(), &m_n,
