@@ -18,4 +18,4 @@ Imports: Rcpp (>= 1.0.1), RSpectra, stats
 LinkingTo: Rcpp, RcppEigen, RSpectra
 Suggests: knitr, rmarkdown, prettydoc, scales
 VignetteBuilder: knitr, rmarkdown
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.2

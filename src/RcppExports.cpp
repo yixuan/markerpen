@@ -7,6 +7,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // pca_pen_
 List pca_pen_(MapMat S, IntegerVector gr, MapMat x0, double lambda, double gamma, double lr, int maxiter, int fan_maxinc, int fan_maxiter, double eps, int verbose);
 RcppExport SEXP _markerpen_pca_pen_(SEXP SSEXP, SEXP grSEXP, SEXP x0SEXP, SEXP lambdaSEXP, SEXP gammaSEXP, SEXP lrSEXP, SEXP maxiterSEXP, SEXP fan_maxincSEXP, SEXP fan_maxiterSEXP, SEXP epsSEXP, SEXP verboseSEXP) {
