@@ -1,6 +1,20 @@
 \name{NEWS}
 \title{News for Package "markerpen"}
 
+\section{Changes in markerpen version 0.1.2}{
+  \subsection{NEW FEATURES}{
+    \itemize{
+      \item Updated the eigen solver code for future releases of \pkg{RSpectra}.
+    }
+  }
+  \subsection{BUG FIXES}{
+    \itemize{
+      \item Removed the explicit requirement for C++11 in DESCRIPTION.
+      \item Updated the citation information.
+    }
+  }
+}
+
 \section{Changes in markerpen version 0.1.1}{
   \subsection{BUG FIXES}{
     \itemize{
