@@ -96,6 +96,9 @@ enum class ShiftSolver { Fast, Lapack };
 
 class SymTridiag
 {
+public:
+    using Scalar = double;
+
 private:
     const int m_n;
     const double* m_diag;

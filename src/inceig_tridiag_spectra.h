@@ -1,11 +1,13 @@
 #ifndef MARKERPEN_INCEIG_TRIDIAG_SPECTRA_H
 #define MARKERPEN_INCEIG_TRIDIAG_SPECTRA_H
 
+// For RSpectra >= 0.17-0
+#define PREFER_SPECTRA_1YZ
+
 #include "common.h"
 #include "tridiag.h"
 #include "walltime.h"
-#include <Spectra/SymEigsSolver.h>
-#include <Spectra/MatOp/DenseSymMatProd.h>
+#include <SymEigs.h>
 
 #ifndef F77_CALL
 #define F77_CALL(x)	x ## _
@@ -128,10 +130,18 @@ public:
         m_tridiagop.set_mode(OpMode::Prod);
         if(init_evals_lg > 0)
         {
+#ifdef SPECTRA_1YZ_INCLUDED
+            Spectra::SymEigsSolver<SymTridiag> eigs_lg(
+                m_tridiagop, init_evals_lg, std::min(m_n, std::max(20, init_evals_lg * 2 + 1))
+            );
+            eigs_lg.init();
+            eigs_lg.compute(Spectra::SortRule::LargestAlge, 1000, 1e-6, Spectra::SortRule::LargestAlge);
+#else
             Spectra::SymEigsSolver<double, Spectra::LARGEST_ALGE, SymTridiag>
-            eigs_lg(&m_tridiagop, init_evals_lg, std::min(m_n, std::max(20, init_evals_lg * 2 + 1)));
+                eigs_lg(&m_tridiagop, init_evals_lg, std::min(m_n, std::max(20, init_evals_lg * 2 + 1)));
             eigs_lg.init();
             eigs_lg.compute(1000, 1e-6, Spectra::LARGEST_ALGE);
+#endif
 
             // Store computed eigenvalues and eigenvectors
             m_evals_lg.head(init_evals_lg).noalias() = eigs_lg.eigenvalues();
@@ -142,10 +152,18 @@ public:
 
         if(init_evals_sm > 0)
         {
+#ifdef SPECTRA_1YZ_INCLUDED
+            Spectra::SymEigsSolver<SymTridiag> eigs_sm(
+                m_tridiagop, init_evals_sm, std::min(m_n, std::max(20, init_evals_sm * 2 + 1))
+            );
+            eigs_sm.init();
+            eigs_sm.compute(Spectra::SortRule::SmallestAlge, 1000, 1e-6, Spectra::SortRule::SmallestAlge);
+#else
             Spectra::SymEigsSolver<double, Spectra::SMALLEST_ALGE, SymTridiag>
-            eigs_sm(&m_tridiagop, init_evals_sm, std::min(m_n, std::max(20, init_evals_sm * 2 + 1)));
+                eigs_sm(&m_tridiagop, init_evals_sm, std::min(m_n, std::max(20, init_evals_sm * 2 + 1)));
             eigs_sm.init();
             eigs_sm.compute(1000, 1e-6, Spectra::SMALLEST_ALGE);
+#endif
 
             // Store computed eigenvalues and eigenvectors
             m_evals_sm.head(init_evals_sm).noalias() = eigs_sm.eigenvalues();

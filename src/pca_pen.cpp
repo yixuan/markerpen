@@ -1,7 +1,9 @@
+// For RSpectra >= 0.17-0
+#define PREFER_SPECTRA_1YZ
+
 #include "common.h"
 #include "prox_fantope.h"
-#include <Spectra/SymEigsSolver.h>
-#include <Spectra/MatOp/DenseSymMatProd.h>
+#include <SymEigs.h>
 
 using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
@@ -122,11 +124,19 @@ public:
     {
         Matrix& x = m_work;
         x.noalias() = 0.5 * (m_z1 + m_z2);
+
+#ifdef SPECTRA_1YZ_INCLUDED
+        Spectra::DenseSymMatProd<double> op(x);
+        Spectra::SymEigsSolver<Spectra::DenseSymMatProd<double>> eigs(op, 1, 10);
+        eigs.init();
+        eigs.compute(Spectra::SortRule::LargestAlge);
+#else
         Spectra::DenseSymMatProd<double> op(x);
         Spectra::SymEigsSolver< double, Spectra::LARGEST_ALGE, Spectra::DenseSymMatProd<double> >
             eigs(&op, 1, 10);
         eigs.init();
         eigs.compute();
+#endif
 
         m_ework.noalias() = eigs.eigenvectors();
         double diff = std::numeric_limits<double>::infinity();
@@ -145,11 +155,18 @@ public:
 
         if(update_ev)
         {
+#ifdef SPECTRA_1YZ_INCLUDED
+            Spectra::DenseSymMatProd<double> op(x);
+            Spectra::SymEigsSolver<Spectra::DenseSymMatProd<double>> eigs(op, 1, 10);
+            eigs.init();
+            eigs.compute(Spectra::SortRule::LargestAlge);
+#else
             Spectra::DenseSymMatProd<double> op(x);
             Spectra::SymEigsSolver< double, Spectra::LARGEST_ALGE, Spectra::DenseSymMatProd<double> >
                 eigs(&op, 1, 10);
             eigs.init();
             eigs.compute();
+#endif
             m_evecs.noalias() = eigs.eigenvectors();
         }
 
