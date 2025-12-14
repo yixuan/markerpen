@@ -20,7 +20,7 @@ A C++ compiler that supports the C++11 standard is needed to install `markerpen`
 from source.
 
 For best performance, it is **strongly suggested** linking your R to the
-[OpenBLAS](https://github.com/OpenMathLib/OpenBLAS) library for matrix computation, although
+[OpenBLAS](https://github.com/OpenMathLib/OpenBLAS/) library for matrix computation, although
 this step is optional. You can achieve this with the help of the
 [ropenblas](https://prdm0.github.io/ropenblas/) package.
 
