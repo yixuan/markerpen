@@ -5,7 +5,7 @@ detect cell-type-specific marker genes from bulk tissue RNA sequencing data.
 It is a semi-supervised algorithm that uses bulk transcriptome data to
 refine a prior marker gene list, based on the paper
 [Identification of cell-type-specific marker genes from co-expression
-patterns in tissue samples](https://www.biorxiv.org/content/10.1101/2020.11.07.373043v1)
+patterns in tissue samples](https://doi.org/10.1093/bioinformatics/btab257)
 by Yixuan Qiu, Jiebiao Wang, Jing Lei, and Kathryn Roeder.
 
 ### Installation
@@ -20,7 +20,7 @@ A C++ compiler that supports the C++11 standard is needed to install `markerpen`
 from source.
 
 For best performance, it is **strongly suggested** linking your R to the
-[OpenBLAS](https://www.openblas.net/) library for matrix computation, although
+[OpenBLAS](https://github.com/OpenMathLib/OpenBLAS) library for matrix computation, although
 this step is optional. You can achieve this with the help of the
 [ropenblas](https://prdm0.github.io/ropenblas/) package.
 
@@ -185,15 +185,14 @@ vis_cor(mat_exp, markers_ord)
 Please consider to cite our work if you have used our algorithm or package in your research.
 
 ```
-@article{Qiu2020.11.07.373043,
-    author = {Qiu, Yixuan and Wang, Jiebiao and Lei, Jing and Roeder, Kathryn},
-    title = {Identification of cell-type-specific marker genes from co-expression patterns in tissue samples},
-    elocation-id = {2020.11.07.373043},
-    year = {2020},
-    doi = {10.1101/2020.11.07.373043},
-    publisher = {Cold Spring Harbor Laboratory},
-    URL = {https://www.biorxiv.org/content/early/2020/11/08/2020.11.07.373043},
-    eprint = {https://www.biorxiv.org/content/early/2020/11/08/2020.11.07.373043.full.pdf},
-    journal = {bioRxiv}
+@article{qiu2021identification,
+  title={Identification of cell-type-specific marker genes from co-expression patterns in tissue samples},
+  author={Qiu, Yixuan and Wang, Jiebiao and Lei, Jing and Roeder, Kathryn},
+  journal={Bioinformatics},
+  volume={37},
+  number={19},
+  pages={3228--3234},
+  year={2021},
+  publisher={Oxford University Press}
 }
 ```
